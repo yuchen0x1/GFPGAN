@@ -98,11 +98,23 @@ If you want to use the original model in our paper, please see [PaperModel.md](P
 
     pip install -r requirements.txt
     python setup.py develop
-
-    # If you want to enhance the background (non-face) regions with Real-ESRGAN,
-    # you also need to install the realesrgan package
-    pip install realesrgan
     ```
+
+## :ambulance: Troubleshooting & Compatibility
+
+This fork keeps GFPGAN usable on modern environments. The following upstream issues are addressed:
+
+- **`ModuleNotFoundError: No module named 'torchvision.transforms.functional_tensor'`** (#506, #510, #539, #556, #602, #603): importing `gfpgan` now installs a compatibility shim automatically, so the pinned basicsr keeps working with torchvision >= 0.17. If you import `basicsr` or `realesrgan` directly, do `import gfpgan` first.
+- **`No matching distribution found for tb-nightly`** (#418): `requirements.txt` now depends on the stable `tensorboard`. Note that basicsr itself still declares `tb-nightly`; if `pip install basicsr` fails on your Python version, install the other requirements first and then `pip install basicsr==1.4.2 --no-deps`.
+- **NumPy 2.x incompatibility** (#182, #224): `numpy` is now pinned to `<2`.
+- **GPU checkpoints fail to load on CPU-only machines**: model files are loaded with `map_location='cpu'` and the safe `weights_only=True` loader (also required by torch >= 2.6).
+- **Black background with enhanced face** (#205, #255): the half-precision background upsampler fails on some GPUs; pass the new `--fp32` flag to `inference_gfpgan.py` to disable it.
+- **Offline / blocked GitHub downloads** (#292, #414): pass `--model_path /path/to/GFPGANv1.4.pth` to use a local model file; face detection/parsing weights go to `gfpgan/weights/`.
+- **`-w/--weight` does not change results**: no released architecture consumes this option (every `forward` swallows it via `**kwargs`). The flag now prints a warning instead of silently doing nothing; it is kept for API compatibility.
+- **RTX 50xx (Blackwell) GPUs** ("no kernel image" errors): your PyTorch is too old. Use torch >= 2.7 with the CUDA 12.8 wheels (`pip install torch --index-url https://download.pytorch.org/whl/cu128`) on Python >= 3.10.
+- **Training failures** (#93, #215, #545, #564): training requires exactly `basicsr==1.4.2`; `ModuleNotFoundError: No module named 'basicsr.losses.gan_loss'` means an older basicsr is installed.
+
+Known limitations of the original project (not fixable in code): AMD / Intel ARC GPUs are not supported by PyTorch CUDA builds (#643), background enhancement is skipped in CPU mode (#109, #445), and CodeFormer was never part of this repo (#266).
 
 ## :zap: Quick Inference
 

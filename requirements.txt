@@ -1,11 +1,12 @@
 basicsr>=1.4.2
 facexlib>=0.2.5
 lmdb
-numpy
+numpy>=1.20,<2
 opencv-python
 pyyaml
+realesrgan
 scipy
-tb-nightly
+tensorboard
 torch>=1.7
 torchvision
 tqdm

@@ -4,9 +4,11 @@ import glob
 import numpy as np
 import os
 import torch
-from basicsr.utils import imwrite
 
+# Import gfpgan first: importing it applies compatibility shims (gfpgan/_compat.py)
+# that keep basicsr importable on torchvision >= 0.17.
 from gfpgan import GFPGANer
+from basicsr.utils import imwrite
 
 
 def main():
@@ -41,14 +43,20 @@ def main():
         type=str,
         default='auto',
         help='Image extension. Options: auto | jpg | png, auto means using the same extension as inputs. Default: auto')
-    parser.add_argument('-w', '--weight', type=float, default=0.5, help='Adjustable weights.')
-    args = parser.parse_args()
-
+    parser.add_argument('-w', '--weight', type=float, default=0.5, help='Adjustable weights (no effect on the released models, kept for API compatibility).')
+    parser.add_argument(
+        '--model_path',
+        type=str,
+        default=None,
+        help='Path to a local GFPGAN model file (.pth); overrides the -v auto-download. Useful for offline or blocked-network setups.')
+    parser.add_argument(
+        '--fp32',
+        action='store_true',
+        help='Disable half precision in the background upsampler (fixes black background or half-precision errors on some GPUs).')
     args = parser.parse_args()
 
     # ------------------------ input & output ------------------------
-    if args.input.endswith('/'):
-        args.input = args.input[:-1]
+    args.input = args.input.rstrip('/\\')
     if os.path.isfile(args.input):
         img_list = [args.input]
     else:
@@ -74,12 +82,29 @@ def main():
                 tile=args.bg_tile,
                 tile_pad=10,
                 pre_pad=0,
-                half=True)  # need to set False in CPU mode
+                half=not args.fp32)  # --fp32 fixes black background on some GPUs
     else:
         bg_upsampler = None
 
     # ------------------------ set up GFPGAN restorer ------------------------
-    if args.version == '1':
+    if args.model_path:
+        # explicit local model file: infer the architecture from the file name
+        model_path = args.model_path
+        if not os.path.isfile(model_path):
+            raise FileNotFoundError(f'Model file not found: {model_path}')
+        name = os.path.basename(model_path)
+        if name == 'GFPGANv1.pth':
+            arch = 'original'
+            channel_multiplier = 1
+        elif 'RestoreFormer' in name:
+            arch = 'RestoreFormer'
+            channel_multiplier = 2
+        else:
+            arch = 'clean'
+            channel_multiplier = 2
+        model_name = name[:-4]
+        url = None
+    elif args.version == '1':
         arch = 'original'
         channel_multiplier = 1
         model_name = 'GFPGANv1'
@@ -115,12 +140,19 @@ def main():
         # download pre-trained models from url
         model_path = url
 
-    restorer = GFPGANer(
-        model_path=model_path,
-        upscale=args.upscale,
-        arch=arch,
-        channel_multiplier=channel_multiplier,
-        bg_upsampler=bg_upsampler)
+    try:
+        restorer = GFPGANer(
+            model_path=model_path,
+            upscale=args.upscale,
+            arch=arch,
+            channel_multiplier=channel_multiplier,
+            bg_upsampler=bg_upsampler)
+    except Exception as error:
+        raise RuntimeError(
+            'Failed to initialize GFPGAN. A common cause is failing to download the pre-trained models '
+            '(GitHub may be unreachable in some regions). Download the models manually: pass --model_path '
+            'for the GFPGAN model, and put detection_Resnet50_Final.pth / parsing_parsenet.pth into '
+            f'gfpgan/weights. Original error: {error}') from error
 
     # ------------------------ restore ------------------------
     for img_path in img_list:

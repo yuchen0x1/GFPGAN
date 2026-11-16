@@ -89,7 +89,13 @@ class GFPGANer():
         if model_path.startswith('https://'):
             model_path = load_file_from_url(
                 url=model_path, model_dir=os.path.join(ROOT_DIR, 'gfpgan/weights'), progress=True, file_name=None)
-        loadnet = torch.load(model_path)
+        # map_location: checkpoints saved from GPU tensors must also load on
+        # CPU-only machines; weights_only: the safe loader is the default since
+        # torch 2.6 and the released files only contain state dicts.
+        try:
+            loadnet = torch.load(model_path, map_location='cpu', weights_only=True)
+        except TypeError:  # torch < 1.13 has no weights_only argument
+            loadnet = torch.load(model_path, map_location='cpu')
         if 'params_ema' in loadnet:
             keyname = 'params_ema'
         else:
@@ -101,6 +107,12 @@ class GFPGANer():
     @torch.no_grad()
     def enhance(self, img, has_aligned=False, only_center_face=False, paste_back=True, weight=0.5):
         self.face_helper.clean_all()
+
+        if weight != 0.5:
+            # No released architecture consumes this option (it is swallowed by
+            # **kwargs in every forward); warn instead of failing silently.
+            print('Note: `weight` has no effect on the released GFPGAN models '
+                  '(no architecture consumes it). The argument is kept for API compatibility.')
 
         if has_aligned:  # the inputs are already aligned
             img = cv2.resize(img, (512, 512))
