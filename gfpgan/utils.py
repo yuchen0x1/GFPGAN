@@ -34,7 +34,10 @@ class GFPGANer():
         self.bg_upsampler = bg_upsampler
 
         # initialize model
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
+        if device is None:
+            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        else:  # accept both torch.device and strings like 'cuda:1' (#474, #148)
+            self.device = torch.device(device) if isinstance(device, str) else device
         # initialize the GFP-GAN
         if arch == 'clean':
             self.gfpgan = GFPGANv1Clean(
@@ -76,6 +79,9 @@ class GFPGANer():
             from gfpgan.archs.restoreformer_arch import RestoreFormer
             self.gfpgan = RestoreFormer()
         # initialize face helper
+        # anchor the facexlib weight directory to this package (absolute path);
+        # a relative path makes facexlib download to the current working
+        # directory (#442, #389) and re-download when run from elsewhere.
         self.face_helper = FaceRestoreHelper(
             upscale,
             face_size=512,
@@ -84,7 +90,7 @@ class GFPGANer():
             save_ext='png',
             use_parse=True,
             device=self.device,
-            model_rootpath='gfpgan/weights')
+            model_rootpath=os.path.join(ROOT_DIR, 'gfpgan/weights'))
 
         if model_path.startswith('https://'):
             model_path = load_file_from_url(
@@ -96,6 +102,15 @@ class GFPGANer():
             loadnet = torch.load(model_path, map_location='cpu', weights_only=True)
         except TypeError:  # torch < 1.13 has no weights_only argument
             loadnet = torch.load(model_path, map_location='cpu')
+        except Exception as error:
+            raise RuntimeError(
+                f'Failed to load the GFPGAN model file "{model_path}". The download is most likely '
+                f'corrupted or incomplete (errors like "PytorchStreamReader failed reading zip archive" '
+                f'indicate this); please delete it and re-download. Original error: {error}') from error
+        if not isinstance(loadnet, dict) or ('params_ema' not in loadnet and 'params' not in loadnet):
+            raise RuntimeError(
+                f'The file "{model_path}" is not a valid GFPGAN checkpoint (no "params"/"params_ema" found). '
+                'It is either corrupted, incomplete, or not a GFPGAN model.')
         if 'params_ema' in loadnet:
             keyname = 'params_ema'
         else:

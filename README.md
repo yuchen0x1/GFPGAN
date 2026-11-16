@@ -108,13 +108,31 @@ This fork keeps GFPGAN usable on modern environments. The following upstream iss
 - **`No matching distribution found for tb-nightly`** (#418): `requirements.txt` now depends on the stable `tensorboard`. Note that basicsr itself still declares `tb-nightly`; if `pip install basicsr` fails on your Python version, install the other requirements first and then `pip install basicsr==1.4.2 --no-deps`.
 - **NumPy 2.x incompatibility** (#182, #224): `numpy` is now pinned to `<2`.
 - **GPU checkpoints fail to load on CPU-only machines**: model files are loaded with `map_location='cpu'` and the safe `weights_only=True` loader (also required by torch >= 2.6).
-- **Black background with enhanced face** (#205, #255): the half-precision background upsampler fails on some GPUs; pass the new `--fp32` flag to `inference_gfpgan.py` to disable it.
+- **Corrupted / invalid model files** (#303, #200): errors such as `PytorchStreamReader failed reading zip archive` or `argument of type 'NoneType' is not iterable` now raise a clear message telling you to re-download the model.
+- **Model weights downloaded to the wrong folder** (#442, #389, #174): the facexlib detection/parsing weights directory is now anchored to the package (absolute path), so GFPGAN works no matter which directory you launch it from.
+- **Choosing the device** (#474, #148): pass `GFPGANer(..., device='cuda:1')` or use the new `--device` flag (`cuda`, `cuda:1`, `cpu`) in `inference_gfpgan.py`.
+- **Non-ASCII file names fail on Windows** (#438, Real-ESRGAN #159): image reading/writing now goes through Unicode-safe helpers.
+- **Old facexlib versions** (#216, #168): `get_face_landmarks_5() got an unexpected keyword argument 'eye_dist_threshold'` means your facexlib is too old; `requirements.txt` now requires `facexlib>=0.3.0`.
+- **Black background with enhanced face** (#205, #255, Real-ESRGAN #116): the half-precision background upsampler fails on some GPUs; pass the new `--fp32` flag to `inference_gfpgan.py` to disable it.
 - **Offline / blocked GitHub downloads** (#292, #414): pass `--model_path /path/to/GFPGANv1.4.pth` to use a local model file; face detection/parsing weights go to `gfpgan/weights/`.
+- **No output image although the run "succeeds"** (#412): usually means no face was detected; the script now prints `No faces detected ...` instead of writing nothing.
 - **`-w/--weight` does not change results**: no released architecture consumes this option (every `forward` swallows it via `**kwargs`). The flag now prints a warning instead of silently doing nothing; it is kept for API compatibility.
+- **Paper model V1 import errors** (`deform_conv.so`, `fused_act_ext`, `BASICSR_JIT` hangs) (#81, #125, #135, #191, #212, #558, #608, #96): the V1 paper architecture needs compiled CUDA extensions from basicsr. Prefer the clean models (V1.2–V1.4), which run without extensions.
+- **Custom-trained checkpoints** (#65, #411, #464, #489, #550): load your `net_g_*.pth` with `--model_path` (or `GFPGANer(model_path=...)`); state-dict key mismatches mean the file was saved with a different `arch` / `channel_multiplier`.
+- **GPU utilization stays low** (#370, #415, #477, #479, #634): expected — face tensors are small and pre/post-processing runs on CPU. Throughput scales with the number of images, not with larger `--upscale`.
+- **Face blending artifacts / square blocks** (#294, #316, #359, #590): caused by the facexlib paste-back mask and the fixed 512 face crop (hair/edges outside the box are untouched). Try `--fp32`; a larger crop box is a known limitation, not a bug.
+- **Video / batch processing** (#164, #334, #407, #552): split the video into frames and call the script per frame, or loop over `GFPGANer.enhance()`; there is no batched single-call API.
+- **Multiprocessing crashes** (#574): use the `'spawn'` start method when combining CUDA with `multiprocessing`.
 - **RTX 50xx (Blackwell) GPUs** ("no kernel image" errors): your PyTorch is too old. Use torch >= 2.7 with the CUDA 12.8 wheels (`pip install torch --index-url https://download.pytorch.org/whl/cu128`) on Python >= 3.10.
 - **Training failures** (#93, #215, #545, #564): training requires exactly `basicsr==1.4.2`; `ModuleNotFoundError: No module named 'basicsr.losses.gan_loss'` means an older basicsr is installed.
+- **Docker** (#102, #194, #306): a maintained community image is available at [docker-gfpgan](https://github.com/soulteary/docker-gfpgan).
 
-Known limitations of the original project (not fixable in code): AMD / Intel ARC GPUs are not supported by PyTorch CUDA builds (#643), background enhancement is skipped in CPU mode (#109, #445), and CodeFormer was never part of this repo (#266).
+Known limitations of the original project (not fixable in code):
+- AMD / Intel ARC / Apple-Silicon GPUs are not supported by PyTorch CUDA builds (#203, #417, #547, #643); those machines fall back to CPU.
+- Background enhancement is skipped in CPU mode (#109, #445), so only faces are restored there (#280, #299, #429).
+- FP16 inference and ONNX / TensorRT / TorchScript export are not officially supported (#50, #104, #238, #275, #480, #483, #587).
+- The restored identity may differ slightly from the input, and the model smooths skin / alters hair style on some photos (#139, #159, #167, #171, #180, #181, #235, #241, #605) — these are model traits, choose V1.2 vs V1.4 accordingly.
+- CodeFormer was never part of this repo (#266).
 
 ## :zap: Quick Inference
 

@@ -8,7 +8,24 @@ import torch
 # Import gfpgan first: importing it applies compatibility shims (gfpgan/_compat.py)
 # that keep basicsr importable on torchvision >= 0.17.
 from gfpgan import GFPGANer
-from basicsr.utils import imwrite
+
+
+def imread(path, flags=cv2.IMREAD_COLOR):
+    """Unicode-safe cv2.imread: plain cv2.imread fails on non-ASCII paths on Windows (#438)."""
+    try:
+        return cv2.imdecode(np.fromfile(path, dtype=np.uint8), flags)
+    except (OSError, ValueError):
+        return cv2.imread(path, flags)
+
+
+def imwrite(img, path, params=None):
+    """Unicode-safe cv2.imwrite that also creates parent directories (#438)."""
+    os.makedirs(os.path.dirname(os.path.abspath(path)), exist_ok=True)
+    ext = os.path.splitext(path)[1] or '.png'
+    ok, buf = cv2.imencode(ext, img, params or [])
+    if not ok:
+        raise IOError(f'Failed to encode image for "{path}"')
+    buf.tofile(path)
 
 
 def main():
@@ -53,6 +70,11 @@ def main():
         '--fp32',
         action='store_true',
         help='Disable half precision in the background upsampler (fixes black background or half-precision errors on some GPUs).')
+    parser.add_argument(
+        '--device',
+        type=str,
+        default=None,
+        help='Device to run on, e.g. cuda, cuda:1 or cpu. Default: cuda if available, else cpu.')
     args = parser.parse_args()
 
     # ------------------------ input & output ------------------------
@@ -146,7 +168,8 @@ def main():
             upscale=args.upscale,
             arch=arch,
             channel_multiplier=channel_multiplier,
-            bg_upsampler=bg_upsampler)
+            bg_upsampler=bg_upsampler,
+            device=args.device)
     except Exception as error:
         raise RuntimeError(
             'Failed to initialize GFPGAN. A common cause is failing to download the pre-trained models '
@@ -160,7 +183,10 @@ def main():
         img_name = os.path.basename(img_path)
         print(f'Processing {img_name} ...')
         basename, ext = os.path.splitext(img_name)
-        input_img = cv2.imread(img_path, cv2.IMREAD_COLOR)
+        input_img = imread(img_path, cv2.IMREAD_COLOR)
+        if input_img is None:
+            print(f'Failed to read {img_name}; skipped.')
+            continue
 
         # restore faces and background if necessary
         cropped_faces, restored_faces, restored_img = restorer.enhance(
@@ -169,6 +195,10 @@ def main():
             only_center_face=args.only_center_face,
             paste_back=True,
             weight=args.weight)
+
+        if not cropped_faces:
+            print(f'No faces detected in {img_name}; the output contains no restored faces.')
+            continue
 
         # save faces
         for idx, (cropped_face, restored_face) in enumerate(zip(cropped_faces, restored_faces)):

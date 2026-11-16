@@ -20,7 +20,10 @@ python inference_gfpgan.py -i inputs/whole_imgs -o results -v 1.4 -s 2
 
 - `--fp32`：修复部分显卡上背景增强输出全黑的问题
 - `--model_path`：指定本地模型文件，无需联网自动下载
+- `--device`：指定运行设备（`cuda`、`cuda:1`、`cpu`）
 - `-w`：权重参数对已发布模型无效（保留仅为兼容，会打印提示）
 - 训练需 `basicsr==1.4.2`，报 `No module named 'basicsr.losses.gan_loss'` 说明 basicsr 版本过旧
+- Windows 下含中文/特殊字符的文件名现已支持；模型文件损坏（如 `PytorchStreamReader failed reading zip archive`）会给出明确的重下提示
+- 人脸检测/解析权重目录已改为包内绝对路径，从任意目录启动都能正常工作
 
 还未完工，欢迎贡献！
