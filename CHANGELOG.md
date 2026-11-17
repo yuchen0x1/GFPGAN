@@ -43,18 +43,21 @@ comprehensively upgrades the project:
 ### Packaging & tooling
 
 - Modern PEP 621 packaging (`pyproject.toml`); version 1.4.0; Python
-  3.8-3.13 classifiers; `setup.py` reduced to a legacy shim — use
+  3.8-3.12 classifiers; `setup.py` reduced to a legacy shim — use
   `pip install -e .`.
 - numpy 2.x is supported and tested (`numpy>=1.20`).
 - facexlib pinned to >= 0.3.0 (older releases lack `eye_dist_threshold`,
   #216, #168); `realesrgan` added to requirements so background
   enhancement works out of the box; stable `tensorboard` replaces
   `tb-nightly` (#418).
+- Tag-triggered GitHub releases build and validate an sdist and wheel, then
+  attach both distributions to the release without requiring a PyPI token.
 - Test suite: the upstream arch tests now pass (they never ran without
-  compiled extensions) plus new compatibility tests; `pytest` works from
-  a plain checkout (`tests/conftest.py`).
+  compiled extensions) plus new compatibility tests; `pytest` works from a
+  plain checkout (`tests/conftest.py`).
 - CI: lint workflow modernized and a new CPU test workflow added
-  (Python 3.11/3.13).
+  (Python 3.11/3.12).
+
 - Dockerfile for CPU inference, buildable from the repository root.
 
 ### Verification

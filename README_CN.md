@@ -26,6 +26,10 @@ python setup.py develop
 python inference_gfpgan.py -i inputs/whole_imgs -o results -v 1.4 -s 2
 ```
 
+## GitHub Release
+
+本 fork 不会向 PyPI 发布已被上游占用的 `gfpgan` 包名。维护者将版本号同步到 `pyproject.toml` 和 `VERSION` 后，推送形如 `vX.Y.Z` 的 tag，即可触发 [`.github/workflows/release.yml`](.github/workflows/release.yml)。工作流会构建并校验源码包和 wheel，将构建产物保存为 Actions artifact，并附加到 GitHub Release。
+
 常用参数：
 
 - `--fp32`：修复部分显卡上背景增强输出全黑的问题

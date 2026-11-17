@@ -1,41 +1,84 @@
-name: release
+name: GitHub Release
+
 on:
   push:
     tags:
-      - '*'
+      - 'v*.*.*'
+
+permissions:
+  contents: write
 
 jobs:
-  build:
-    permissions: write-all
-    name: Create Release
+  build-and-release:
+    name: Build and publish release assets
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          tag_name: ${{ github.ref }}
-          release_name: GFPGAN ${{ github.ref }} Release Note
-          body: |
-            🚀 See you again 😸
-            🚀Have a nice day 😸 and happy everyday 😃
-            🚀 Long time no see ☄️
+          python-version: '3.11'
 
-            ✨ **Highlights**
-            ✅ [Features] Support ...
+      - name: Install build tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build twine
 
-            🐛 **Bug Fixes**
+      - name: Verify tag matches package version
+        env:
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          python - <<'PY'
+          import os
+          import pathlib
+          import tomllib
 
-            🌴 **Improvements**
+          tag = os.environ['RELEASE_TAG']
+          if not tag.startswith('v'):
+              raise SystemExit(f'Expected a v-prefixed tag, got {tag!r}')
 
-            📢📢📢
+          tag_version = tag[1:]
+          project_version = tomllib.loads(
+              pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version']
+          version_file = pathlib.Path('VERSION').read_text(encoding='utf-8').strip()
 
-            <p align="center">
-               <img src="https://raw.githubusercontent.com/TencentARC/GFPGAN/master/assets/gfpgan_logo.png" height=150>
-            </p>
-          draft: true
-          prerelease: false
+          versions = {
+              'tag': tag_version,
+              'pyproject.toml': project_version,
+              'VERSION': version_file,
+          }
+          if len(set(versions.values())) != 1:
+              raise SystemExit(f'Version mismatch: {versions}')
+
+          print(f'Releasing GFPGAN {tag_version}')
+          PY
+
+      - name: Build source distribution and wheel
+        run: python -m build --sdist --wheel
+
+      - name: Validate distributions
+        run: python -m twine check dist/*
+
+      - name: Store build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-distributions
+          path: dist/
+
+      - name: Create GitHub Release and upload distributions
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ github.ref_name }}
+          REPOSITORY: ${{ github.repository }}
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" dist/* --repo "$REPOSITORY" --clobber
+          else
+            gh release create "$RELEASE_TAG" dist/* \
+              --repo "$REPOSITORY" \
+              --title "GFPGAN $RELEASE_TAG" \
+              --generate-notes \
+              --verify-tag
+          fi

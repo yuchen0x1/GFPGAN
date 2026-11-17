@@ -11,7 +11,7 @@
 
 [![Tests](https://github.com/yuchen0x1/GFPGAN/actions/workflows/tests.yml/badge.svg)](https://github.com/yuchen0x1/GFPGAN/actions/workflows/tests.yml)
 [![Lint](https://github.com/yuchen0x1/GFPGAN/actions/workflows/pylint.yml/badge.svg)](https://github.com/yuchen0x1/GFPGAN/actions/workflows/pylint.yml)
-[![PyPI](https://img.shields.io/pypi/v/gfpgan)](https://pypi.org/project/gfpgan/)
+[![Release](https://img.shields.io/github/v/release/yuchen0x1/GFPGAN?sort=semver)](https://github.com/yuchen0x1/GFPGAN/releases)
 [![LICENSE](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/TencentARC/GFPGAN/blob/master/LICENSE)
 </div>
 
@@ -110,6 +110,14 @@ run without compiled CUDA extensions and on CPU — no `BASICSR_JIT` /
     pip install -r requirements.txt
     pip install -e .
     ```
+
+### GitHub releases
+
+This fork does not publish the upstream-occupied `gfpgan` package name to
+PyPI. For maintainers, pushing a `vX.Y.Z` tag whose version matches both
+`pyproject.toml` and `VERSION` starts [`.github/workflows/release.yml`](.github/workflows/release.yml).
+The workflow builds and validates a source distribution and wheel, stores them
+as workflow artifacts, and attaches them to a GitHub Release.
 
 1. Run the tests (optional but recommended)
 
