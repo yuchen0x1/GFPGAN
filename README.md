@@ -9,14 +9,23 @@
     <img src="https://user-images.githubusercontent.com/17445847/187162058-c764ced6-952f-404b-ac85-ba95cce18e7b.png" width="4%" alt="" />
 </a> -->
 
-[![download](https://img.shields.io/github/downloads/TencentARC/GFPGAN/total.svg)](https://github.com/TencentARC/GFPGAN/releases)
+[![Tests](https://github.com/yuchen0x1/GFPGAN/actions/workflows/tests.yml/badge.svg)](https://github.com/yuchen0x1/GFPGAN/actions/workflows/tests.yml)
+[![Lint](https://github.com/yuchen0x1/GFPGAN/actions/workflows/pylint.yml/badge.svg)](https://github.com/yuchen0x1/GFPGAN/actions/workflows/pylint.yml)
 [![PyPI](https://img.shields.io/pypi/v/gfpgan)](https://pypi.org/project/gfpgan/)
-[![Open issue](https://img.shields.io/github/issues/TencentARC/GFPGAN)](https://github.com/TencentARC/GFPGAN/issues)
-[![Closed issue](https://img.shields.io/github/issues-closed/TencentARC/GFPGAN)](https://github.com/TencentARC/GFPGAN/issues)
 [![LICENSE](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/TencentARC/GFPGAN/blob/master/LICENSE)
-[![python lint](https://github.com/TencentARC/GFPGAN/actions/workflows/pylint.yml/badge.svg)](https://github.com/TencentARC/GFPGAN/blob/master/.github/workflows/pylint.yml)
-[![Publish-pip](https://github.com/TencentARC/GFPGAN/actions/workflows/publish-pip.yml/badge.svg)](https://github.com/TencentARC/GFPGAN/blob/master/.github/workflows/publish-pip.yml)
 </div>
+
+## :fork_and_knife: About this fork
+
+This is a maintained fork of [TencentARC/GFPGAN](https://github.com/TencentARC/GFPGAN) (based on upstream v1.3.8), upgraded to **v1.4.0**. Highlights:
+
+- **Runs everywhere**: modern environment compatibility — torchvision >= 0.17, torch >= 2.6/2.7 (incl. RTX 50xx/Blackwell), numpy 2.x, Python 3.8–3.12.
+- **The paper model (V1) works again**: the StyleGAN2 CUDA ops now get exact pure-PyTorch fallbacks, so GFPGANv1 runs without compiled CUDA extensions — including on CPU — with no `BASICSR_JIT`/`BASICSR_EXT` builds.
+- **~60 reproducible upstream issues fixed**, found by triaging every open issue of GFPGAN and Real-ESRGAN (961 items): see [CHANGELOG.md](CHANGELOG.md) and the [Troubleshooting](#ambulance-troubleshooting--compatibility) section.
+- **Quality infrastructure**: 18-test suite (green in CI on Python 3.11/3.12), lint workflow, CPU Docker image, modern PEP 621 packaging.
+- **New CLI options**: `--device`, `--fp32`, `--model_path`, `--no_parse`; `GFPGANer(..., device=..., use_parse=...)`.
+
+The rest of this document is the upstream README, updated where this fork differs.
 
 1. :boom: **Updated** online demo: [![Replicate](https://img.shields.io/static/v1?label=Demo&message=Replicate&color=blue)](https://replicate.com/tencentarc/gfpgan). Here is the [backup](https://replicate.com/xinntao/gfpgan).
 1. :boom: **Updated** online demo: [![Huggingface Gradio](https://img.shields.io/static/v1?label=Demo&message=Huggingface%20Gradio&color=orange)](https://huggingface.co/spaces/Xintao/GFPGAN)
@@ -145,34 +154,38 @@ Known limitations of the original project (not fixable in code):
 
 ## :zap: Quick Inference
 
-We take the v1.3 version for an example. More models can be found [here](#european_castle-model-zoo).
-
-Download pre-trained models: [GFPGANv1.3.pth](https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.3.pth)
+Download a pre-trained model (or let the script auto-download it; see
+[Troubleshooting](#ambulance-troubleshooting--compatibility) for blocked networks):
 
 ```bash
-wget https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.3.pth -P experiments/pretrained_models
+wget https://github.com/TencentARC/GFPGAN/releases/download/v1.3.0/GFPGANv1.4.pth -P experiments/pretrained_models
 ```
 
 **Inference!**
 
 ```bash
-python inference_gfpgan.py -i inputs/whole_imgs -o results -v 1.3 -s 2
+python inference_gfpgan.py -i inputs/whole_imgs -o results -v 1.4 -s 2
 ```
 
 ```console
-Usage: python inference_gfpgan.py -i inputs/whole_imgs -o results -v 1.3 -s 2 [options]...
+Usage: python inference_gfpgan.py -i inputs/whole_imgs -o results -v 1.4 -s 2 [options]...
 
   -h                   show this help
   -i input             Input image or folder. Default: inputs/whole_imgs
   -o output            Output folder. Default: results
-  -v version           GFPGAN model version. Option: 1 | 1.2 | 1.3. Default: 1.3
+  -v version           GFPGAN model version. Option: 1 | 1.2 | 1.3 | 1.4 | RestoreFormer. Default: 1.3
   -s upscale           The final upsampling scale of the image. Default: 2
-  -bg_upsampler        background upsampler. Default: realesrgan
-  -bg_tile             Tile size for background sampler, 0 for no tile during testing. Default: 400
-  -suffix              Suffix of the restored faces
-  -only_center_face    Only restore the center face
-  -aligned             Input are aligned faces
-  -ext                 Image extension. Options: auto | jpg | png, auto means using the same extension as inputs. Default: auto
+  -w weight            Adjustable weights (no effect on the released models, kept for API compatibility)
+  --bg_upsampler       background upsampler. Default: realesrgan
+  --bg_tile            Tile size for background sampler, 0 for no tile during testing. Default: 400
+  --suffix             Suffix of the restored faces
+  --only_center_face   Only restore the center face
+  --aligned            Input are aligned faces
+  --ext                Image extension. Options: auto | jpg | png, auto means using the same extension as inputs. Default: auto
+  --model_path         Path to a local GFPGAN model file; overrides the -v auto-download
+  --fp32               Disable half precision in the background upsampler (fixes black background on some GPUs)
+  --device             Device to run on, e.g. cuda, cuda:1 or cpu. Default: cuda if available, else cpu
+  --no_parse           Skip the face parsing model (slightly faster)
 ```
 
 If you want to use the original model in our paper, please see [PaperModel.md](PaperModel.md) for installation and inference.
