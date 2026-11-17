@@ -33,13 +33,22 @@ classifiers = [
 dependencies = [
     "basicsr>=1.4.2",
     "facexlib>=0.3.0",
+    # basicsr 1.4.2 declares tb-nightly (unavailable on indexes), so users
+    # typically install it with --no-deps; these are its real runtime deps
+    "addict",
+    "future",
     "lmdb",
+    "lazy-loader",
     "numpy>=1.20",
     "opencv-python",
+    "packaging",
     "pyyaml",
     "realesrgan",
+    "requests",
+    "scikit-image",
     "scipy",
     "tensorboard",
+    "tifffile",
     "torch>=1.7",
     "torchvision",
     "tqdm",

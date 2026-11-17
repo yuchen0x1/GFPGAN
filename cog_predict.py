@@ -74,8 +74,10 @@ class Predictor(BasePredictor):
     ) -> Path:
         weight = 0.5
         print(img, version, scale, weight)
+        out_path = None
+        output = None
         try:
-            extension = os.path.splitext(os.path.basename(str(img)))[1]
+            extension = os.path.splitext(os.path.basename(str(img)))[1] or '.png'
             img = cv2.imread(str(img), cv2.IMREAD_UNCHANGED)
             if len(img.shape) == 3 and img.shape[2] == 4:
                 img_mode = 'RGBA'
@@ -121,12 +123,16 @@ class Predictor(BasePredictor):
                         arch='RestoreFormer',
                         channel_multiplier=2,
                         bg_upsampler=self.upsampler)
+                    self.current_version = version
 
             try:
                 _, _, output = self.face_enhancer.enhance(
                     img, has_aligned=False, only_center_face=False, paste_back=True, weight=weight)
             except RuntimeError as error:
                 print('Error', error)
+                # keep the run alive: fall back to the (unrestored) input so an
+                # output image is still produced instead of an UnboundLocalError
+                output = img
 
             try:
                 if scale != 2:
@@ -147,7 +153,6 @@ class Predictor(BasePredictor):
         finally:
             clean_folder('output')
         return out_path
-
 
 def clean_folder(folder):
     for filename in os.listdir(folder):

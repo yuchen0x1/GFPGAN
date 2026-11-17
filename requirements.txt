@@ -11,3 +11,11 @@ torch>=1.7
 torchvision
 tqdm
 yapf
+
+addict
+future
+lazy-loader
+packaging
+requests
+scikit-image
+tifffile

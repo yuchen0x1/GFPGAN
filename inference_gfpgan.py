@@ -135,8 +135,6 @@ def main():
         else:
             arch = 'clean'
             channel_multiplier = 2
-        model_name = name[:-4]
-        url = None
     elif args.version == '1':
         arch = 'original'
         channel_multiplier = 1
@@ -165,13 +163,15 @@ def main():
     else:
         raise ValueError(f'Wrong model version {args.version}.')
 
-    # determine model paths
-    model_path = os.path.join('experiments/pretrained_models', model_name + '.pth')
-    if not os.path.isfile(model_path):
-        model_path = os.path.join('gfpgan/weights', model_name + '.pth')
-    if not os.path.isfile(model_path):
-        # download pre-trained models from url
-        model_path = url
+    # determine model paths (only for the auto-download flow; --model_path
+    # users keep their own file and must never be overridden)
+    if not args.model_path:
+        model_path = os.path.join('experiments/pretrained_models', model_name + '.pth')
+        if not os.path.isfile(model_path):
+            model_path = os.path.join('gfpgan/weights', model_name + '.pth')
+        if not os.path.isfile(model_path):
+            # download pre-trained models from url
+            model_path = url
 
     try:
         restorer = GFPGANer(
