@@ -27,6 +27,17 @@ This is a maintained fork of [TencentARC/GFPGAN](https://github.com/TencentARC/G
 
 The rest of this document is the upstream README, updated where this fork differs.
 
+> This is a community-maintained fork of GFPGAN. It is not an official TencentARC release.
+
+### What is included in this fork
+
+- A compatibility shim for modern torchvision and BasicSR, including a pure-PyTorch fallback for the StyleGAN2 operators used by the original V1 model.
+- CPU-safe checkpoint loading and inference, with explicit device selection for `cpu`, `cuda`, and `cuda:N`.
+- Unicode-safe image I/O on Windows, clearer errors for missing or corrupted weights, and a package-anchored directory for facexlib models.
+- Reproducible CPU tests and lint checks that run in GitHub Actions on Python 3.11 and 3.12.
+
+The fork keeps the original model weights, inference API, training entry points, and Apache 2.0 license. See [CHANGELOG.md](CHANGELOG.md) for the full list of changes.
+
 1. :boom: **Updated** online demo: [![Replicate](https://img.shields.io/static/v1?label=Demo&message=Replicate&color=blue)](https://replicate.com/tencentarc/gfpgan). Here is the [backup](https://replicate.com/xinntao/gfpgan).
 1. :boom: **Updated** online demo: [![Huggingface Gradio](https://img.shields.io/static/v1?label=Demo&message=Huggingface%20Gradio&color=orange)](https://huggingface.co/spaces/Xintao/GFPGAN)
 1. [Colab Demo](https://colab.research.google.com/drive/1sVsoBd9AjckIXThgtZhGrHRfFI6UUYOo) for GFPGAN <a href="https://colab.research.google.com/drive/1sVsoBd9AjckIXThgtZhGrHRfFI6UUYOo"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="google colab logo"></a>; (Another [Colab Demo](https://colab.research.google.com/drive/1Oa1WwKB4M4l1GmR7CtswDVgOCOeSLChA?usp=sharing) for the original paper model)
