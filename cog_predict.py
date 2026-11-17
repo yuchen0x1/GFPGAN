@@ -10,6 +10,7 @@ os.system('python setup.py develop')
 os.system('pip install realesrgan')
 
 import cv2
+import numpy as np
 import shutil
 import tempfile
 import torch
@@ -79,8 +80,13 @@ class Predictor(BasePredictor):
         try:
             extension = os.path.splitext(os.path.basename(str(img)))[1] or '.png'
             img = cv2.imread(str(img), cv2.IMREAD_UNCHANGED)
+            alpha = None
             if len(img.shape) == 3 and img.shape[2] == 4:
                 img_mode = 'RGBA'
+                # the detection / restoration networks only accept 3 channels;
+                # keep the alpha aside and re-attach it to the output image
+                alpha = img[:, :, 3]
+                img = cv2.cvtColor(img, cv2.COLOR_BGRA2BGR)
             elif len(img.shape) == 2:
                 img_mode = None
                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
@@ -144,6 +150,9 @@ class Predictor(BasePredictor):
 
             if img_mode == 'RGBA':  # RGBA images should be saved in png format
                 extension = 'png'
+                if output.shape[:2] != alpha.shape[:2]:
+                    alpha = cv2.resize(alpha, (output.shape[1], output.shape[0]), interpolation=cv2.INTER_LINEAR)
+                output = np.concatenate([output, alpha[:, :, np.newaxis]], axis=2)
             # save_path = f'output/out.{extension}'
             # cv2.imwrite(save_path, output)
             out_path = Path(tempfile.mkdtemp()) / f'out.{extension}'
@@ -153,6 +162,7 @@ class Predictor(BasePredictor):
         finally:
             clean_folder('output')
         return out_path
+
 
 def clean_folder(folder):
     for filename in os.listdir(folder):

@@ -261,7 +261,7 @@ class GFPGANBilinear(nn.Module):
                     ScaledLeakyReLU(0.2),
                     EqualConv2d(out_channels, sft_out_channels, 3, stride=1, padding=1, bias=True, bias_init_val=0)))
 
-    def forward(self, x, return_latents=False, return_rgb=True, randomize_noise=True):
+    def forward(self, x, return_latents=False, return_rgb=True, randomize_noise=True, **kwargs):
         """Forward function for GFPGANBilinear.
 
         Args:
@@ -269,6 +269,9 @@ class GFPGANBilinear(nn.Module):
             return_latents (bool): Whether to return style latents. Default: False.
             return_rgb (bool): Whether return intermediate rgb images. Default: True.
             randomize_noise (bool): Randomize noise, used when 'noise' is False. Default: True.
+
+        Unused kwargs (e.g. ``weight`` passed by ``GFPGANer.enhance``) are
+        swallowed, matching GFPGANv1Clean.
         """
         conditions = []
         unet_skips = []

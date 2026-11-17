@@ -60,8 +60,40 @@ comprehensively upgrades the project:
 
 - Dockerfile for CPU inference, buildable from the repository root.
 
+### Full-codebase review fixes (2026-11-18)
+
+- Training is repaired on modern PyTorch: `setup_optimizers` passed
+  `betas = (0**1, 0.99**1)` to Adam, whose first element is the *int* `0`;
+  torch >= 2.6 rejects betas that are not consistently floats, so
+  constructing `GFPGANModel` (i.e. any training run) failed immediately.
+- `get_roi_regions` now derives the ground-truth eye/mouth regions from
+  `self.gt.detach()`: gt gradients are never used, and when gt carries
+  `requires_grad` (left on by the R1 regularization of a previous step —
+  any scenario that reuses the gt tensor across steps) the left and right
+  eye regions shared one roi_align subgraph whose freeing made the second
+  facial-D backward raise "Trying to backward through the graph a second
+  time".
+- `inference_gfpgan.py` no longer skips writing the restored whole image
+  when no face is detected: with a background upsampler (or the default
+  Lanczos paste-back) the upscaled image is still the expected output; the
+  "no faces" warning stays (#412).
+- `GFPGANBilinear.forward` accepts and ignores extra kwargs (e.g. the
+  `weight` `GFPGANer.enhance` always passes), so `arch='bilinear'` no
+  longer raises `TypeError`.
+- cog predictor: RGBA inputs are converted to BGR for detection/restoration
+  and the alpha channel is re-attached to the saved output; previously a
+  4-channel image made the networks raise and the run fell back to the
+  unprocessed input.
+- `tests/conftest.py` imports `gfpgan` before any test module so test files
+  that `import basicsr` directly (test_gfpgan_model) collect on
+  torchvision >= 0.17; `test_gfpgan_model` falls back to `num_gpu: 0` when
+  no CUDA device is present (now runnable on CPU); `test_utils` skips when
+  the pretrained models are not downloaded; the fused_leaky_relu shim
+  comment now documents the true broadcast contract (per-last-dim for the
+  2D/3D `EqualLinear` inputs, per-dim-1 channel for 4D conv inputs).
+
 ### Verification
 
-All of the above is covered by `pytest` (18 tests) and verified on
+All of the above is covered by `pytest` (20 tests) and verified on
 Python 3.11 + torch 2.7.1+cu128 (RTX 5060, GPU) and CPU-only execution,
 with numpy 1.26 and numpy 2.4.

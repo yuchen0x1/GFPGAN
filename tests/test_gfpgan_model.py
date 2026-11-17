@@ -1,3 +1,4 @@
+import os
 import tempfile
 import torch
 import yaml
@@ -10,10 +11,17 @@ from gfpgan.archs.arcface_arch import ResNetArcFace
 from gfpgan.archs.gfpganv1_arch import FacialComponentDiscriminator, GFPGANv1
 from gfpgan.models.gfpgan_model import GFPGANModel
 
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 def test_gfpgan_model():
-    with open('tests/data/test_gfpgan_model.yml', mode='r') as f:
+    with open(os.path.join(REPO_ROOT, 'tests', 'data', 'test_gfpgan_model.yml'), mode='r') as f:
         opt = yaml.load(f, Loader=yaml.FullLoader)
+
+    # device-agnostic: fall back to CPU when no CUDA device is available
+    # (num_gpu: 0 makes basicsr place the model on the CPU)
+    if not torch.cuda.is_available():
+        opt['num_gpu'] = 0
 
     # build model
     model = GFPGANModel(opt)
@@ -94,13 +102,9 @@ def test_gfpgan_model():
 
     # ----------------- test nondist_validation -------------------- #
     # construct dataloader
+    gt_root = os.path.join(REPO_ROOT, 'tests', 'data', 'gt')
     dataset_opt = dict(
-        name='Demo',
-        dataroot_gt='tests/data/gt',
-        dataroot_lq='tests/data/gt',
-        io_backend=dict(type='disk'),
-        scale=4,
-        phase='val')
+        name='Demo', dataroot_gt=gt_root, dataroot_lq=gt_root, io_backend=dict(type='disk'), scale=4, phase='val')
     dataset = PairedImageDataset(dataset_opt)
     dataloader = torch.utils.data.DataLoader(dataset=dataset, batch_size=1, shuffle=False, num_workers=0)
     assert model.is_train is True

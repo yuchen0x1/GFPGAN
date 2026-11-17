@@ -52,7 +52,8 @@ def test_native_fused_leaky_relu_broadcast_matches_kernel():
     expected = F.leaky_relu(x + bias.view(1, -1), negative_slope=slope) * scale
     assert torch.allclose(fused_leaky_relu(x, bias, slope, scale), expected)
 
-    # 3D latent case (different_w=True): bias still on the last dim
+    # 3D case (EqualLinear applied to a (N, num_latent, C) style latent):
+    # F.linear semantics — bias on the last dim
     x = torch.randn(2, 8, 7)
     expected = F.leaky_relu(x + bias.view(1, 1, -1), negative_slope=slope) * scale
     assert torch.allclose(fused_leaky_relu(x, bias, slope, scale), expected)

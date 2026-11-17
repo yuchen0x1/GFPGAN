@@ -209,8 +209,9 @@ def main():
             weight=args.weight)
 
         if not cropped_faces:
+            # warn, but keep going: with a background upsampler the restored_img
+            # below still contains the upscaled whole image (#412)
             print(f'No faces detected in {img_name}; the output contains no restored faces.')
-            continue
 
         # save faces
         for idx, (cropped_face, restored_face) in enumerate(zip(cropped_faces, restored_faces)):

@@ -161,7 +161,9 @@ class GFPGANModel(BaseModel):
         }]
         optim_type = train_opt['optim_g'].pop('type')
         lr = train_opt['optim_g']['lr'] * net_g_reg_ratio
-        betas = (0**net_g_reg_ratio, 0.99**net_g_reg_ratio)
+        # float() / 0.0 base: 0**1 evaluates to the int 0 and torch >= 2.6
+        # rejects Adam betas that are not consistently floats
+        betas = (0.0**net_g_reg_ratio, 0.99**net_g_reg_ratio)
         self.optimizer_g = self.get_optimizer(optim_type, optim_params_g, lr, betas=betas)
         self.optimizers.append(self.optimizer_g)
 
@@ -176,7 +178,7 @@ class GFPGANModel(BaseModel):
         }]
         optim_type = train_opt['optim_d'].pop('type')
         lr = train_opt['optim_d']['lr'] * net_d_reg_ratio
-        betas = (0**net_d_reg_ratio, 0.99**net_d_reg_ratio)
+        betas = (0.0**net_d_reg_ratio, 0.99**net_d_reg_ratio)
         self.optimizer_d = self.get_optimizer(optim_type, optim_params_d, lr, betas=betas)
         self.optimizers.append(self.optimizer_d)
 
@@ -252,11 +254,16 @@ class GFPGANModel(BaseModel):
         rois_eyes = torch.cat(rois_eyes, 0).to(self.device)
         rois_mouths = torch.cat(rois_mouths, 0).to(self.device)
 
-        # real images
-        all_eyes = roi_align(self.gt, boxes=rois_eyes, output_size=eye_out_size) * face_ratio
+        # real images (detached: gt gradients are never used and detaching keeps
+        # these regions graph-free even when gt has requires_grad set, e.g. left
+        # on by the R1 regularization of a previous step; otherwise the shared
+        # roi_align subgraph would be freed by the first facial-D backward and
+        # the second one would raise "backward through the graph a second time")
+        gt_roi = self.gt.detach()
+        all_eyes = roi_align(gt_roi, boxes=rois_eyes, output_size=eye_out_size) * face_ratio
         self.left_eyes_gt = all_eyes[0::2, :, :, :]
         self.right_eyes_gt = all_eyes[1::2, :, :, :]
-        self.mouths_gt = roi_align(self.gt, boxes=rois_mouths, output_size=mouth_out_size) * face_ratio
+        self.mouths_gt = roi_align(gt_roi, boxes=rois_mouths, output_size=mouth_out_size) * face_ratio
         # output
         all_eyes = roi_align(self.output, boxes=rois_eyes, output_size=eye_out_size) * face_ratio
         self.left_eyes = all_eyes[0::2, :, :, :]

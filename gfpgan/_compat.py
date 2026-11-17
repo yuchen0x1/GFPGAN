@@ -73,10 +73,13 @@ def patch_stylegan2_ops_native_fallback():
     if not hasattr(_fused_act, 'fused_act_ext'):
 
         def _native_fused_leaky_relu(input, bias, negative_slope=0.2, scale=2**0.5):
-            # Broadcast the bias exactly like the CUDA kernel does
-            # (bias index = (flat_idx // prod(size[2:])) % bias.numel()):
-            # per-channel on dim 1 for conv inputs (>= 4D), per-last-dim for
-            # linear inputs (2D / 3D).
+            # 4D conv inputs: bias per channel on dim 1, exactly like the CUDA
+            # kernel (bias index = (flat_idx // prod(size[2:])) % bias.numel()).
+            # 2D / 3D inputs come from EqualLinear (F.linear semantics, channels
+            # on the last dim — e.g. a (N, num_latent, C) style latent passing
+            # through the style MLP), so the bias broadcasts on the last dim.
+            # (The CUDA kernel's formula would index a 3D input's rows as
+            # (flat_idx // C) % C, which only makes sense for 4D.)
             if input.ndim >= 4:
                 return _F.leaky_relu(
                     input + bias.view(1, -1, *([1] * (input.ndim - 2))), negative_slope=negative_slope) * scale

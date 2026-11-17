@@ -134,8 +134,12 @@ as workflow artifacts, and attaches them to a GitHub Release.
 
     ```bash
     pip install pytest
-    pytest tests/test_compat.py tests/test_gfpgan_arch.py tests/test_arcface_arch.py tests/test_stylegan2_clean_arch.py tests/test_ffhq_degradation_dataset.py
+    pytest tests/
     ```
+
+    The full suite runs on CPU and GPU alike; `tests/test_utils.py` skips
+    itself when the pretrained models are not present under
+    `experiments/pretrained_models`.
 
 ## :ambulance: Troubleshooting & Compatibility
 

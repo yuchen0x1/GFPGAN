@@ -28,4 +28,6 @@ jobs:
         pip install basicsr==1.4.2 facexlib==0.3.0 realesrgan==0.3.0 --no-deps
         pip install pytest
     - name: Run tests
-      run: pytest tests/test_compat.py tests/test_gfpgan_arch.py tests/test_arcface_arch.py tests/test_stylegan2_clean_arch.py tests/test_ffhq_degradation_dataset.py
+      # the whole suite runs on CPU; test_utils skips itself (no pretrained
+      # models on CI) and test_gfpgan_model falls back to num_gpu: 0
+      run: pytest tests/
