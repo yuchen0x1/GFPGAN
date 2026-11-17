@@ -1,5 +1,4 @@
 import os
-
 import pytest
 import torch
 import torch.nn.functional as F
@@ -11,11 +10,11 @@ has_weights = os.path.isfile(V14_WEIGHTS)
 
 def test_functional_tensor_shim():
     """The shim keeps basicsr importable on torchvision >= 0.17 (#506, #602, ...)."""
+    import basicsr  # noqa: F401  must not raise
     import torchvision
+    import torchvision.transforms.functional_tensor as ft
 
     import gfpgan  # noqa: F401  must be imported first, see README Troubleshooting
-    import basicsr  # noqa: F401  must not raise
-    import torchvision.transforms.functional_tensor as ft
 
     assert ft.rgb_to_grayscale is not None
     assert torchvision.__version__

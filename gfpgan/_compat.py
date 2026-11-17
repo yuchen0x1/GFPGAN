@@ -49,12 +49,11 @@ def patch_stylegan2_ops_native_fallback():
     binds the original functions at import time, so after installing the
     fallback the consumer module's namespace is re-bound as well.
     """
-    import torch.nn.functional as _F
-
     # NOTE: `import basicsr.ops.upfirdn2d.upfirdn2d as X` would bind the
     # re-exported *function* (the package attribute shadows the submodule),
     # so resolve the real submodule files through importlib instead.
     import importlib
+    import torch.nn.functional as _F
 
     try:
         _fused_act = importlib.import_module('basicsr.ops.fused_act.fused_act')

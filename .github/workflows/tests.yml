@@ -7,7 +7,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.11', '3.13']
+        # basicsr 1.4.2 ships an sdist only, and its setup.py is incompatible
+        # with Python 3.13 (PEP 667 exec-locals change), so 3.13 cannot
+        # install basicsr until upstream fixes it.
+        python-version: ['3.11', '3.12']
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python ${{ matrix.python-version }}

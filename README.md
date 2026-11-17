@@ -68,7 +68,9 @@ Other recommended projects:<br>
 
 ## :wrench: Dependencies and Installation
 
-- Python >= 3.8 (3.11+ recommended; the package is tested on 3.11 and 3.13)
+- Python >= 3.8 (3.11/3.12 recommended; the test suite runs on both. Python 3.13 cannot
+  install basicsr 1.4.2 yet: it ships an sdist whose setup.py predates the Python 3.13
+  exec-locals change — use 3.11/3.12 until basicsr releases a fixed version)
 - [PyTorch >= 1.7](https://pytorch.org/) (RTX 50xx GPUs need torch >= 2.7 with CUDA 12.8 wheels)
 - Option: NVIDIA GPU + [CUDA](https://developer.nvidia.com/cuda-downloads)
 - numpy 1.20+ (numpy 2.x supported and tested)
