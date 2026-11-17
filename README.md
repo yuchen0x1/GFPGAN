@@ -68,36 +68,43 @@ Other recommended projects:<br>
 
 ## :wrench: Dependencies and Installation
 
-- Python >= 3.7 (Recommend to use [Anaconda](https://www.anaconda.com/download/#linux) or [Miniconda](https://docs.conda.io/en/latest/miniconda.html))
-- [PyTorch >= 1.7](https://pytorch.org/)
+- Python >= 3.8 (3.11+ recommended; the package is tested on 3.11 and 3.13)
+- [PyTorch >= 1.7](https://pytorch.org/) (RTX 50xx GPUs need torch >= 2.7 with CUDA 12.8 wheels)
 - Option: NVIDIA GPU + [CUDA](https://developer.nvidia.com/cuda-downloads)
-- Option: Linux
+- numpy 1.20+ (numpy 2.x supported and tested)
 
 ### Installation
 
-We now provide a *clean* version of GFPGAN, which does not require customized CUDA extensions. <br>
-If you want to use the original model in our paper, please see [PaperModel.md](PaperModel.md) for installation.
+GFPGAN ships a *clean* version that does not require customized CUDA
+extensions, and this fork additionally makes the original paper model (V1)
+run without compiled CUDA extensions and on CPU — no `BASICSR_JIT` /
+`BASICSR_EXT` builds needed for either.
 
 1. Clone repo
 
     ```bash
-    git clone https://github.com/TencentARC/GFPGAN.git
+    git clone https://github.com/yuchen0x1/GFPGAN.git
     cd GFPGAN
     ```
 
 1. Install dependent packages
 
     ```bash
-    # Install basicsr - https://github.com/xinntao/BasicSR
-    # We use BasicSR for both training and inference
-    pip install basicsr
-
-    # Install facexlib - https://github.com/xinntao/facexlib
-    # We use face detection and face restoration helper in the facexlib package
-    pip install facexlib
+    # basicsr still declares tb-nightly, which is unavailable on some Python
+    # versions: install its real runtime deps manually, then install the
+    # basicsr/facexlib/realesrgan packages without resolving deps.
+    pip install addict future lmdb opencv-python pyyaml scipy tensorboard tqdm yapf requests scikit-image
+    pip install basicsr==1.4.2 facexlib==0.3.0 realesrgan==0.3.0 --no-deps
 
     pip install -r requirements.txt
-    python setup.py develop
+    pip install -e .
+    ```
+
+1. Run the tests (optional but recommended)
+
+    ```bash
+    pip install pytest
+    pytest tests/test_compat.py tests/test_gfpgan_arch.py tests/test_arcface_arch.py tests/test_stylegan2_clean_arch.py tests/test_ffhq_degradation_dataset.py
     ```
 
 ## :ambulance: Troubleshooting & Compatibility
@@ -106,7 +113,7 @@ This fork keeps GFPGAN usable on modern environments. The following upstream iss
 
 - **`ModuleNotFoundError: No module named 'torchvision.transforms.functional_tensor'`** (#506, #510, #539, #556, #602, #603): importing `gfpgan` now installs a compatibility shim automatically, so the pinned basicsr keeps working with torchvision >= 0.17. If you import `basicsr` or `realesrgan` directly, do `import gfpgan` first.
 - **`No matching distribution found for tb-nightly`** (#418): `requirements.txt` now depends on the stable `tensorboard`. Note that basicsr itself still declares `tb-nightly`; if `pip install basicsr` fails on your Python version, install the other requirements first and then `pip install basicsr==1.4.2 --no-deps`.
-- **NumPy 2.x incompatibility** (#182, #224): `numpy` is now pinned to `<2`.
+- **NumPy issues** (#182, #224): the old errors came from torch builds compiled against NumPy 1.x running under NumPy 2.x. With torch >= 2.7 (and everything this fork patches), numpy 2.x is supported and tested; the requirement is `numpy>=1.20`.
 - **GPU checkpoints fail to load on CPU-only machines**: model files are loaded with `map_location='cpu'` and the safe `weights_only=True` loader (also required by torch >= 2.6).
 - **Corrupted / invalid model files** (#303, #200): errors such as `PytorchStreamReader failed reading zip archive` or `argument of type 'NoneType' is not iterable` now raise a clear message telling you to re-download the model.
 - **Model weights downloaded to the wrong folder** (#442, #389, #174): the facexlib detection/parsing weights directory is now anchored to the package (absolute path), so GFPGAN works no matter which directory you launch it from.
@@ -117,7 +124,7 @@ This fork keeps GFPGAN usable on modern environments. The following upstream iss
 - **Offline / blocked GitHub downloads** (#292, #414): pass `--model_path /path/to/GFPGANv1.4.pth` to use a local model file; face detection/parsing weights go to `gfpgan/weights/`.
 - **No output image although the run "succeeds"** (#412): usually means no face was detected; the script now prints `No faces detected ...` instead of writing nothing.
 - **`-w/--weight` does not change results**: no released architecture consumes this option (every `forward` swallows it via `**kwargs`). The flag now prints a warning instead of silently doing nothing; it is kept for API compatibility.
-- **Paper model V1 import errors** (`deform_conv.so`, `fused_act_ext`, `BASICSR_JIT` hangs) (#81, #125, #135, #191, #212, #558, #608, #96): the V1 paper architecture needs compiled CUDA extensions from basicsr. Prefer the clean models (V1.2–V1.4), which run without extensions.
+- **Paper model V1 import/forward errors** (`deform_conv.so`, `fused_act_ext`, `BASICSR_JIT` hangs) (#81, #125, #135, #191, #212, #558, #608, #96): **fixed in this fork**. The StyleGAN2 CUDA ops now get exact pure-PyTorch fallbacks when no compiled extension is present, so the V1 paper architecture runs everywhere — including on CPU — with no `BASICSR_JIT`/`BASICSR_EXT` builds. The clean models (V1.2–V1.4) remain the recommended defaults.
 - **Custom-trained checkpoints** (#65, #411, #464, #489, #550): load your `net_g_*.pth` with `--model_path` (or `GFPGANer(model_path=...)`); state-dict key mismatches mean the file was saved with a different `arch` / `channel_multiplier`.
 - **GPU utilization stays low** (#370, #415, #477, #479, #634): expected — face tensors are small and pre/post-processing runs on CPU. Throughput scales with the number of images, not with larger `--upscale`.
 - **Face blending artifacts / square blocks** (#294, #316, #359, #590): caused by the facexlib paste-back mask and the fixed 512 face crop (hair/edges outside the box are untouched). Try `--fp32`; a larger crop box is a known limitation, not a bug.

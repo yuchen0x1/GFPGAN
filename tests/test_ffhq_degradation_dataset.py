@@ -1,3 +1,4 @@
+import os
 import pytest
 import yaml
 
@@ -23,7 +24,7 @@ def test_ffhq_degradation_dataset():
     # check shape and contents
     assert result['gt'].shape == (3, 512, 512)
     assert result['lq'].shape == (3, 512, 512)
-    assert result['gt_path'] == 'tests/data/gt/00000000.png'
+    assert os.path.normpath(result['gt_path']) == os.path.normpath('tests/data/gt/00000000.png')
 
     # ------------------ test with probability = 0 -------------------- #
     opt['color_jitter_prob'] = 0
@@ -44,7 +45,7 @@ def test_ffhq_degradation_dataset():
     # check shape and contents
     assert result['gt'].shape == (3, 512, 512)
     assert result['lq'].shape == (3, 512, 512)
-    assert result['gt_path'] == 'tests/data/gt/00000000.png'
+    assert os.path.normpath(result['gt_path']) == os.path.normpath('tests/data/gt/00000000.png')
 
     # ------------------ test lmdb backend -------------------- #
     opt['dataroot_gt'] = 'tests/data/ffhq_gt.lmdb'

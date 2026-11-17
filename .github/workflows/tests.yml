@@ -1,0 +1,28 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.11', '3.13']
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+        # basicsr still declares tb-nightly, which is unavailable on some
+        # Python versions: install its real runtime deps manually, then
+        # install basicsr/facexlib/realesrgan without resolving deps.
+        pip install addict future lmdb opencv-python-headless pyyaml scipy tensorboard tqdm yapf requests scikit-image imageio tifffile lazy-loader packaging
+        pip install basicsr==1.4.2 facexlib==0.3.0 realesrgan==0.3.0 --no-deps
+        pip install pytest
+    - name: Run tests
+      run: pytest tests/test_compat.py tests/test_gfpgan_arch.py tests/test_arcface_arch.py tests/test_stylegan2_clean_arch.py tests/test_ffhq_degradation_dataset.py

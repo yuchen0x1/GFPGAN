@@ -46,7 +46,14 @@ class FFHQDegradationDataset(data.Dataset):
 
         if self.crop_components:
             # load component list from a pre-process pth files
-            self.components_list = torch.load(opt.get('component_path'))
+            # the landmark files contain numpy scalars, which the safe loader
+            # (default since torch 2.6) rejects; they are distributed with the
+            # repo and can be trusted.
+            try:
+                self.components_list = torch.load(
+                    opt.get('component_path'), map_location='cpu', weights_only=False)
+            except TypeError:  # torch < 1.13 has no weights_only argument
+                self.components_list = torch.load(opt.get('component_path'), map_location='cpu')
 
         # file client (lmdb io backend)
         if self.io_backend_opt['type'] == 'lmdb':

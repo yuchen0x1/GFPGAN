@@ -1,0 +1,14 @@
+.git
+.github
+_work
+results
+experiments
+downloads
+inputs
+options
+scripts
+tests
+*.md
+Dockerfile
+.dockerignore
+gfpgan/weights

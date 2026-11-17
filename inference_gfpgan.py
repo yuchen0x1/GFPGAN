@@ -60,21 +60,32 @@ def main():
         type=str,
         default='auto',
         help='Image extension. Options: auto | jpg | png, auto means using the same extension as inputs. Default: auto')
-    parser.add_argument('-w', '--weight', type=float, default=0.5, help='Adjustable weights (no effect on the released models, kept for API compatibility).')
+    parser.add_argument(
+        '-w',
+        '--weight',
+        type=float,
+        default=0.5,
+        help='Adjustable weights (no effect on the released models, kept for API compatibility).')
     parser.add_argument(
         '--model_path',
         type=str,
         default=None,
-        help='Path to a local GFPGAN model file (.pth); overrides the -v auto-download. Useful for offline or blocked-network setups.')
+        help='Path to a local GFPGAN model file (.pth); overrides the -v auto-download. '
+        'Useful for offline or blocked-network setups.')
     parser.add_argument(
         '--fp32',
         action='store_true',
-        help='Disable half precision in the background upsampler (fixes black background or half-precision errors on some GPUs).')
+        help='Disable half precision in the background upsampler (fixes black background '
+        'or half-precision errors on some GPUs).')
     parser.add_argument(
         '--device',
         type=str,
         default=None,
         help='Device to run on, e.g. cuda, cuda:1 or cpu. Default: cuda if available, else cpu.')
+    parser.add_argument(
+        '--no_parse',
+        action='store_true',
+        help='Skip the face parsing model (slightly faster, slightly less accurate blending around face borders).')
     args = parser.parse_args()
 
     # ------------------------ input & output ------------------------
@@ -169,7 +180,8 @@ def main():
             arch=arch,
             channel_multiplier=channel_multiplier,
             bg_upsampler=bg_upsampler,
-            device=args.device)
+            device=args.device,
+            use_parse=not args.no_parse)
     except Exception as error:
         raise RuntimeError(
             'Failed to initialize GFPGAN. A common cause is failing to download the pre-trained models '

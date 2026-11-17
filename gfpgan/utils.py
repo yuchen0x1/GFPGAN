@@ -27,9 +27,19 @@ class GFPGANer():
         arch (str): The GFPGAN architecture. Option: clean | original. Default: clean.
         channel_multiplier (int): Channel multiplier for large networks of StyleGAN2. Default: 2.
         bg_upsampler (nn.Module): The upsampler for the background. Default: None.
+        device (str | torch.device): Device to run on. Default: cuda if available, else cpu.
+        use_parse (bool): Use the face parsing model for better blending around
+            face borders. Set to False to skip it and save a little time. Default: True.
     """
 
-    def __init__(self, model_path, upscale=2, arch='clean', channel_multiplier=2, bg_upsampler=None, device=None):
+    def __init__(self,
+                 model_path,
+                 upscale=2,
+                 arch='clean',
+                 channel_multiplier=2,
+                 bg_upsampler=None,
+                 device=None,
+                 use_parse=True):
         self.upscale = upscale
         self.bg_upsampler = bg_upsampler
 
@@ -88,7 +98,7 @@ class GFPGANer():
             crop_ratio=(1, 1),
             det_model='retinaface_resnet50',
             save_ext='png',
-            use_parse=True,
+            use_parse=use_parse,
             device=self.device,
             model_rootpath=os.path.join(ROOT_DIR, 'gfpgan/weights'))
 

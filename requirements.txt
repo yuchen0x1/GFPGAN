@@ -1,7 +1,7 @@
 basicsr>=1.4.2
 facexlib>=0.3.0
 lmdb
-numpy>=1.20,<2
+numpy>=1.20
 opencv-python
 pyyaml
 realesrgan

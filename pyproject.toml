@@ -1,0 +1,62 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gfpgan"
+version = "1.4.0"
+description = "GFPGAN aims at developing Practical Algorithms for Real-world Face Restoration"
+readme = "README.md"
+requires-python = ">=3.8"
+license = { text = "Apache License 2.0" }
+authors = [{ name = "Xintao Wang", email = "xintao.wang@outlook.com" }]
+keywords = [
+    "computer vision",
+    "pytorch",
+    "image restoration",
+    "super-resolution",
+    "face restoration",
+    "gan",
+    "gfpgan",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "basicsr>=1.4.2",
+    "facexlib>=0.3.0",
+    "lmdb",
+    "numpy>=1.20",
+    "opencv-python",
+    "pyyaml",
+    "realesrgan",
+    "scipy",
+    "tensorboard",
+    "torch>=1.7",
+    "torchvision",
+    "tqdm",
+    "yapf",
+]
+
+[project.optional-dependencies]
+tests = ["pytest"]
+
+[project.urls]
+Homepage = "https://github.com/TencentARC/GFPGAN"
+Repository = "https://github.com/yuchen0x1/GFPGAN"
+
+[tool.setuptools.packages.find]
+include = ["gfpgan*"]
+exclude = ["options*", "datasets*", "experiments*", "results*", "tb_logger*", "wandb*"]
+
+[tool.setuptools.package-data]
+gfpgan = ["weights/*.pth"]
