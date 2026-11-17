@@ -50,8 +50,7 @@ class FFHQDegradationDataset(data.Dataset):
             # (default since torch 2.6) rejects; they are distributed with the
             # repo and can be trusted.
             try:
-                self.components_list = torch.load(
-                    opt.get('component_path'), map_location='cpu', weights_only=False)
+                self.components_list = torch.load(opt.get('component_path'), map_location='cpu', weights_only=False)
             except TypeError:  # torch < 1.13 has no weights_only argument
                 self.components_list = torch.load(opt.get('component_path'), map_location='cpu')
 

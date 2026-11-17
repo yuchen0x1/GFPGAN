@@ -113,10 +113,9 @@ class GFPGANer():
         except TypeError:  # torch < 1.13 has no weights_only argument
             loadnet = torch.load(model_path, map_location='cpu')
         except Exception as error:
-            raise RuntimeError(
-                f'Failed to load the GFPGAN model file "{model_path}". The download is most likely '
-                f'corrupted or incomplete (errors like "PytorchStreamReader failed reading zip archive" '
-                f'indicate this); please delete it and re-download. Original error: {error}') from error
+            raise RuntimeError(f'Failed to load the GFPGAN model file "{model_path}". The download is most likely '
+                               f'corrupted or incomplete (errors like "PytorchStreamReader failed reading zip archive" '
+                               f'indicate this); please delete it and re-download. Original error: {error}') from error
         if not isinstance(loadnet, dict) or ('params_ema' not in loadnet and 'params' not in loadnet):
             raise RuntimeError(
                 f'The file "{model_path}" is not a valid GFPGAN checkpoint (no "params"/"params_ema" found). '
