@@ -143,7 +143,7 @@ if __name__ == '__main__':
     parser.add_argument('--save_path', type=str)
     args = parser.parse_args()
 
-    ori_ckpt = torch.load(args.ori_path)['params_ema']
+    ori_ckpt = torch.load(args.ori_path, map_location='cpu')['params_ema']
 
     net = GFPGANv1Clean(
         512,
