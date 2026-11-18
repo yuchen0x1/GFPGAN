@@ -29,6 +29,8 @@ The rest of this document is the upstream README, updated where this fork differ
 
 > This is a community-maintained fork of GFPGAN. It is not an official TencentARC release.
 
+[Releases of this fork](https://github.com/yuchen0x1/GFPGAN/releases) · [Upstream model weights](https://github.com/TencentARC/GFPGAN/releases)
+
 ### What is included in this fork
 
 - A compatibility shim for modern torchvision and BasicSR, including a pure-PyTorch fallback for the StyleGAN2 operators used by the original V1 model.
