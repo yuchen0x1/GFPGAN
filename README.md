@@ -17,7 +17,7 @@
 
 ## :fork_and_knife: About this fork
 
-This is a maintained fork of [TencentARC/GFPGAN](https://github.com/TencentARC/GFPGAN) (based on upstream v1.3.8), upgraded to **v1.4.0**. Highlights:
+This is a maintained fork of [TencentARC/GFPGAN](https://github.com/TencentARC/GFPGAN) (based on upstream v1.3.8), with its package version tracked in [pyproject.toml](pyproject.toml). Highlights:
 
 - **Runs everywhere**: modern environment compatibility — torchvision >= 0.17, torch >= 2.6/2.7 (incl. RTX 50xx/Blackwell), numpy 2.x, Python 3.8–3.12.
 - **The paper model (V1) works again**: the StyleGAN2 CUDA ops now get exact pure-PyTorch fallbacks, so GFPGANv1 runs without compiled CUDA extensions — including on CPU — with no `BASICSR_JIT`/`BASICSR_EXT` builds.
@@ -29,7 +29,17 @@ The rest of this document is the upstream README, updated where this fork differ
 
 > This is a community-maintained fork of GFPGAN. It is not an official TencentARC release.
 
-[Releases of this fork](https://github.com/yuchen0x1/GFPGAN/releases) · [Upstream model weights](https://github.com/TencentARC/GFPGAN/releases)
+## Latest release
+
+<!-- github-release:start -->
+
+No published stable release.
+
+[Release history](https://github.com/yuchen0x1/GFPGAN/releases)
+
+<!-- github-release:end -->
+
+[Upstream model weights](https://github.com/TencentARC/GFPGAN/releases)
 
 ### What is included in this fork
 
