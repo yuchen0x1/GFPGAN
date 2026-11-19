@@ -58,6 +58,9 @@ dependencies = [
 [project.optional-dependencies]
 tests = ["pytest"]
 
+[project.scripts]
+gfpgan = "gfpgan.cli:main"
+
 [project.urls]
 Homepage = "https://github.com/TencentARC/GFPGAN"
 Repository = "https://github.com/yuchen0x1/GFPGAN"

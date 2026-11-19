@@ -2,13 +2,13 @@ import cv2
 import os
 import torch
 from basicsr.utils import img2tensor, tensor2img
-from basicsr.utils.download_util import load_file_from_url
 from facexlib.utils.face_restoration_helper import FaceRestoreHelper
 from torchvision.transforms.functional import normalize
 
 from gfpgan.archs.gfpgan_bilinear_arch import GFPGANBilinear
 from gfpgan.archs.gfpganv1_arch import GFPGANv1
 from gfpgan.archs.gfpganv1_clean_arch import GFPGANv1Clean
+from gfpgan.model_registry import download_model, ensure_runtime_models, find_model_spec
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -30,6 +30,8 @@ class GFPGANer():
         device (str | torch.device): Device to run on. Default: cuda if available, else cpu.
         use_parse (bool): Use the face parsing model for better blending around
             face borders. Set to False to skip it and save a little time. Default: True.
+        model_rootpath (str): Directory for verified runtime model files.
+        offline (bool): Refuse all model downloads when True. Default: False.
     """
 
     def __init__(self,
@@ -39,13 +41,23 @@ class GFPGANer():
                  channel_multiplier=2,
                  bg_upsampler=None,
                  device=None,
-                 use_parse=True):
+                 use_parse=True,
+                 model_rootpath=None,
+                 offline=False):
         self.upscale = upscale
         self.bg_upsampler = bg_upsampler
 
+        if arch not in {'clean', 'bilinear', 'original', 'RestoreFormer'}:
+            raise ValueError(f'Unsupported GFPGAN architecture: {arch}')
+
         # initialize model
         if device is None:
-            self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+            if torch.cuda.is_available():
+                self.device = torch.device('cuda')
+            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                self.device = torch.device('mps')
+            else:
+                self.device = torch.device('cpu')
         else:  # accept both torch.device and strings like 'cuda:1' (#474, #148)
             self.device = torch.device(device) if isinstance(device, str) else device
         # initialize the GFP-GAN
@@ -92,6 +104,12 @@ class GFPGANer():
         # anchor the facexlib weight directory to this package (absolute path);
         # a relative path makes facexlib download to the current working
         # directory (#442, #389) and re-download when run from elsewhere.
+        model_rootpath = os.path.abspath(model_rootpath or os.path.join(ROOT_DIR, 'gfpgan/weights'))
+        # facexlib performs its own downloads. Populate the exact filenames
+        # with verified official artifacts so those fallback downloads are not
+        # reached. facexlib 0.3.0 initializes ParseNet even when use_parse is
+        # false, so both support files remain required for compatibility.
+        ensure_runtime_models(model_rootpath, use_parse=True, offline=offline)
         self.face_helper = FaceRestoreHelper(
             upscale,
             face_size=512,
@@ -100,11 +118,15 @@ class GFPGANer():
             save_ext='png',
             use_parse=use_parse,
             device=self.device,
-            model_rootpath=os.path.join(ROOT_DIR, 'gfpgan/weights'))
+            model_rootpath=model_rootpath)
 
         if model_path.startswith('https://'):
-            model_path = load_file_from_url(
-                url=model_path, model_dir=os.path.join(ROOT_DIR, 'gfpgan/weights'), progress=True, file_name=None)
+            spec = find_model_spec(model_path)
+            if spec is None:
+                raise ValueError(
+                    'Remote GFPGAN checkpoints must be registered with a pinned SHA-256. '
+                    'Download custom checkpoints yourself and pass a local path.')
+            model_path = str(download_model(spec, model_rootpath, offline=offline))
         # map_location: checkpoints saved from GPU tensors must also load on
         # CPU-only machines; weights_only: the safe loader is the default since
         # torch 2.6 and the released files only contain state dicts.
