@@ -1,15 +1,15 @@
 """Production-oriented command line interface for GFPGAN inference."""
 
 import argparse
-from datetime import datetime, timezone
-import json
-import os
-from pathlib import Path
-import time
-
 import cv2
+import json
 import numpy as np
+import os
+import random
+import time
 import torch
+from datetime import datetime, timezone
+from pathlib import Path
 
 from gfpgan import GFPGANer
 from gfpgan.model_registry import (MODEL_REGISTRY, default_model_dir, download_model, find_model_spec, get_model_spec,
@@ -49,7 +49,8 @@ def build_parser():
     parser.add_argument('--bg_upsampler', choices=['realesrgan', 'none'], default='realesrgan')
     parser.add_argument('--bg_tile', type=int, default=400, help='Background tile size; 0 disables tiling.')
     parser.add_argument('--suffix', default=None, help='Suffix added to restored filenames.')
-    parser.add_argument('--only_center_face', action='store_true', help='Restore only the face nearest the image center.')
+    parser.add_argument(
+        '--only_center_face', action='store_true', help='Restore only the face nearest the image center.')
     parser.add_argument('--aligned', action='store_true', help='Treat each input as an already aligned face crop.')
     parser.add_argument('--ext', choices=['auto', 'jpg', 'jpeg', 'png', 'webp'], default='auto')
     parser.add_argument('-w', '--weight', type=float, default=0.5, help='Reserved for API compatibility.')
@@ -64,6 +65,7 @@ def build_parser():
     parser.add_argument('--recursive', action='store_true', help='Process supported images in subdirectories.')
     parser.add_argument('--skip-existing', action='store_true', help='Do not overwrite an existing restored image.')
     parser.add_argument('--report', type=Path, help='Write a JSON batch report (for example results/report.json).')
+    parser.add_argument('--seed', type=int, help='Seed torch, NumPy and Python RNGs for reproducible inference.')
     parser.add_argument('--strict', action='store_true', help='Return a non-zero exit code when any input fails.')
     return parser
 
@@ -186,6 +188,13 @@ def run(args):
     if args.bg_tile < 0:
         raise ValueError('--bg_tile cannot be negative.')
 
+    if args.seed is not None:
+        random.seed(args.seed)
+        np.random.seed(args.seed)
+        torch.manual_seed(args.seed)
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed_all(args.seed)
+
     started = time.monotonic()
     device = _select_device(args.device)
     model_path, arch, channel_multiplier = _resolve_face_model(args)
@@ -278,6 +287,16 @@ def run(args):
         'model': args.version if not args.model_path else str(model_path),
         'model_sha256': known_model.sha256 if known_model else None,
         'device': str(device),
+        'seed': args.seed,
+        'options': {
+            'version': args.version,
+            'upscale': args.upscale,
+            'background_upsampler': args.bg_upsampler,
+            'recursive': args.recursive,
+            'aligned': args.aligned,
+            'only_center_face': args.only_center_face,
+            'use_parse': not args.no_parse,
+        },
         'summary': {
             'total': len(images),
             'processed': processed,

@@ -23,7 +23,7 @@ This is a maintained fork of [TencentARC/GFPGAN](https://github.com/TencentARC/G
 - **The paper model (V1) works again**: the StyleGAN2 CUDA ops now get exact pure-PyTorch fallbacks, so GFPGANv1 runs without compiled CUDA extensions — including on CPU — with no `BASICSR_JIT`/`BASICSR_EXT` builds.
 - **~60 reproducible upstream issues fixed**, found by triaging every open issue of GFPGAN and Real-ESRGAN (961 items): see [CHANGELOG.md](CHANGELOG.md) and the [Troubleshooting](#ambulance-troubleshooting--compatibility) section.
 - **Quality infrastructure**: 18-test suite (green in CI on Python 3.11/3.12), lint workflow, CPU Docker image, modern PEP 621 packaging.
-- **New CLI options**: `--device`, `--fp32`, `--model_path`, `--no_parse`; `GFPGANer(..., device=..., use_parse=...)`.
+- **New CLI options**: `--device`, `--fp32`, `--model_path`, `--no_parse`, `--seed`; `GFPGANer(..., device=..., use_parse=...)`.
 
 The rest of this document is the upstream README, updated where this fork differs.
 
@@ -220,6 +220,7 @@ Usage: python inference_gfpgan.py -i inputs/whole_imgs -o results -v 1.4 -s 2 [o
   --model_path         Path to a local GFPGAN model file; overrides the -v auto-download
   --fp32               Disable half precision in the background upsampler (fixes black background on some GPUs)
   --device             Device to run on, e.g. cuda, cuda:1 or cpu. Default: cuda if available, else cpu
+  --seed               Seed Python, NumPy and PyTorch RNGs for reproducible batches
   --no_parse           Skip the face parsing model (slightly faster)
 ```
 

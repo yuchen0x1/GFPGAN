@@ -135,6 +135,13 @@ def test_unicode_safe_image_io(tmp_path):
     assert back is not None and back.shape == (8, 8, 3)
 
 
+def test_cli_seed_is_parsed():
+    from gfpgan import cli
+
+    args = cli.build_parser().parse_args(['--list-models', '--seed', '123'])
+    assert args.seed == 123
+
+
 @pytest.mark.skipif(not has_weights, reason='GFPGANv1.4.pth not downloaded')
 def test_gfpganer_device_and_corrupt_model():
     """Device strings are accepted and corrupted models raise clear errors."""
