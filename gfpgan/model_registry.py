@@ -7,7 +7,7 @@ from pathlib import Path
 import tempfile
 import time
 from types import MappingProxyType
-from typing import Dict, Optional, Union
+from typing import Optional
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
 from urllib.request import HTTPRedirectHandler, Request, build_opener

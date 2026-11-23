@@ -120,6 +120,7 @@ class GFPGANer():
             device=self.device,
             model_rootpath=model_rootpath)
 
+        model_path = os.fspath(model_path)
         if model_path.startswith('https://'):
             spec = find_model_spec(model_path)
             if spec is None:

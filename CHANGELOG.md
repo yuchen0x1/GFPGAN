@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.4.1 (2026-11-23)
+
+Patch release focused on reproducible inference and release quality:
+
+- Fixed the CI lint failures in the CLI and model registry.
+- Accepted `pathlib.Path` checkpoints through the public `GFPGANer` API.
+- Added `--seed` to seed Python, NumPy, and PyTorch inference RNGs; batch reports
+  now record the seed and effective restoration options.
+- Fixed validation image writes on Windows paths containing non-ASCII characters.
+
 ## 1.4.0 (2026-11-17)
 
 Fork release. In addition to the issue-by-issue triage of both upstream

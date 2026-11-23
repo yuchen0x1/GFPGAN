@@ -1,4 +1,7 @@
+import cv2
 import math
+import numpy as np
+import os
 import os.path as osp
 import torch
 from basicsr.archs import build_network
@@ -6,12 +9,23 @@ from basicsr.losses import build_loss
 from basicsr.losses.gan_loss import r1_penalty
 from basicsr.metrics import calculate_metric
 from basicsr.models.base_model import BaseModel
-from basicsr.utils import get_root_logger, imwrite, tensor2img
+from basicsr.utils import get_root_logger, tensor2img
 from basicsr.utils.registry import MODEL_REGISTRY
 from collections import OrderedDict
 from torch.nn import functional as F
 from torchvision.ops import roi_align
 from tqdm import tqdm
+
+
+def _imwrite(img, file_path, params=None):
+    """Write validation images through an encoding buffer for Unicode paths."""
+    file_path = os.fspath(file_path)
+    os.makedirs(os.path.dirname(os.path.abspath(file_path)), exist_ok=True)
+    extension = osp.splitext(file_path)[1].lower() or '.png'
+    ok, encoded = cv2.imencode(extension, np.asarray(img), params or [])
+    if not ok:
+        raise IOError(f'Failed in writing images: {file_path}')
+    encoded.tofile(file_path)
 
 
 @MODEL_REGISTRY.register()
@@ -538,7 +552,7 @@ class GFPGANModel(BaseModel):
                     else:
                         save_img_path = osp.join(self.opt['path']['visualization'], dataset_name,
                                                  f'{img_name}_{self.opt["name"]}.png')
-                imwrite(sr_img, save_img_path)
+                _imwrite(sr_img, save_img_path)
 
             if with_metrics:
                 # calculate metrics

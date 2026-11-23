@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gfpgan"
-version = "1.4.0"
+version = "1.4.1"
 description = "GFPGAN aims at developing Practical Algorithms for Real-world Face Restoration"
 readme = "README.md"
 requires-python = ">=3.8"

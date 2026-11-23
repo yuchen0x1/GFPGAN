@@ -1,7 +1,7 @@
 import hashlib
-from io import BytesIO
-
 import pytest
+from io import BytesIO
+from pathlib import Path
 
 from gfpgan import model_registry
 from gfpgan.model_registry import ModelSpec
@@ -60,8 +60,8 @@ def test_download_is_verified_and_reused(monkeypatch, tmp_path):
 
 def test_bad_hash_never_becomes_visible(monkeypatch, tmp_path):
     spec, _ = make_spec()
-    monkeypatch.setattr(
-        model_registry, '_open_url', lambda request, _timeout: FakeResponse(b'tampered', request.full_url))
+    monkeypatch.setattr(model_registry, '_open_url',
+                        lambda request, _timeout: FakeResponse(b'tampered', request.full_url))
     with pytest.raises(RuntimeError, match='Failed to download verified model'):
         model_registry.download_model(spec, tmp_path, retries=1)
     assert not (tmp_path / spec.filename).exists()
@@ -82,3 +82,8 @@ def test_untrusted_or_insecure_urls_are_rejected(tmp_path):
         unsafe = ModelSpec(spec.key, spec.filename, url, hashlib.sha256(data).hexdigest(), len(data), spec.family)
         with pytest.raises(ValueError, match='untrusted URL'):
             model_registry.download_model(unsafe, tmp_path)
+
+
+def test_pathlike_model_lookup():
+    spec = model_registry.get_model_spec('1.4')
+    assert model_registry.find_model_spec(Path(spec.filename)) == spec

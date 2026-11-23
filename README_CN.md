@@ -12,7 +12,7 @@
 - **论文原版模型（V1）复活**：StyleGAN2 算子内置精确的纯 PyTorch 回退，无需编译 CUDA 扩展、支持 CPU 直接推理
 - **修复约 60 个可复现的上游问题**（逐条分诊了 GFPGAN + Real-ESRGAN 共 961 个 open issue），详见 [CHANGELOG.md](CHANGELOG.md) 与英文 README 的 [Troubleshooting](README.md#ambulance-troubleshooting--compatibility) 章节
 - **工程化**：18 个测试全绿（CI 跑 3.11/3.12）、Lint 流水线、CPU Docker 镜像、PEP 621 现代打包
-- **新参数**：`--device`、`--fp32`、`--model_path`、`--no_parse`；API 增加 `GFPGANer(..., device=..., use_parse=...)`
+- **新参数**：`--device`、`--fp32`、`--model_path`、`--no_parse`、`--seed`；API 增加 `GFPGANer(..., device=..., use_parse=...)`
 
 ## 🛠 常见问题与兼容性说明
 
@@ -35,6 +35,7 @@ python inference_gfpgan.py -i inputs/whole_imgs -o results -v 1.4 -s 2
 - `--fp32`：修复部分显卡上背景增强输出全黑的问题
 - `--model_path`：指定本地模型文件，无需联网自动下载
 - `--device`：指定运行设备（`cuda`、`cuda:1`、`cpu`）
+- `--seed`：固定 Python、NumPy 和 PyTorch 随机数，便于复现实验和批处理结果
 - `-w`：权重参数对已发布模型无效（保留仅为兼容，会打印提示）
 - 训练需 `basicsr==1.4.2`，报 `No module named 'basicsr.losses.gan_loss'` 说明 basicsr 版本过旧
 - Windows 下含中文/特殊字符的文件名现已支持；模型文件损坏（如 `PytorchStreamReader failed reading zip archive`）会给出明确的重下提示

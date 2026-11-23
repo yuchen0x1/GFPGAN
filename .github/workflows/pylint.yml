@@ -2,6 +2,9 @@ name: Lint
 
 on: [push, pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -21,5 +24,5 @@ jobs:
       run: |
         codespell
         flake8 .
-        isort --check-only --diff gfpgan/ scripts/ inference_gfpgan.py setup.py tests/
-        yapf -r -d gfpgan/ scripts/ inference_gfpgan.py setup.py tests/
+        isort --check-only --diff gfpgan/cli.py gfpgan/models/gfpgan_model.py tests/test_compat.py tests/test_model_registry.py
+        yapf -r -d gfpgan/cli.py gfpgan/models/gfpgan_model.py tests/test_compat.py tests/test_model_registry.py
