@@ -33,9 +33,7 @@ The rest of this document is the upstream README, updated where this fork differ
 
 <!-- github-release:start -->
 
-**[v1.4.1](https://github.com/yuchen0x1/GFPGAN/releases/tag/v1.4.1)** · 2026-11-23
-
-fix: improve reproducible inference and Windows validation by @yuchen0x1 in https://github.com/yuchen0x1/GFPGAN/pull/1
+**[v1.4.2](https://github.com/yuchen0x1/GFPGAN/releases/tag/v1.4.2)** · 2026-11-26
 
 [Release history](https://github.com/yuchen0x1/GFPGAN/releases)
 
