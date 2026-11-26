@@ -137,3 +137,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Recreated by LMDB when the test fixture is opened.
+/tests/data/ffhq_gt.lmdb/lock.mdb
