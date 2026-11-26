@@ -19,6 +19,9 @@ RUN pip install --no-cache-dir torch torchvision --index-url https://download.py
     && pip install --no-cache-dir addict future lmdb opencv-python-headless pyyaml scipy tensorboard tqdm yapf requests scikit-image imageio tifffile lazy-loader packaging \
     && pip install --no-cache-dir basicsr==1.4.2 facexlib==0.3.0 realesrgan==0.3.0 --no-deps
 
+# pyproject.toml (package metadata) and README.md (declared as the readme)
+# must be present for the build backend; MANIFEST.in lists the packaged files.
+COPY pyproject.toml README.md MANIFEST.in VERSION LICENSE requirements.txt ./
 COPY gfpgan/ gfpgan/
 COPY inference_gfpgan.py ./
 RUN pip install --no-cache-dir --no-deps .
