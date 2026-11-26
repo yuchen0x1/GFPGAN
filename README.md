@@ -35,7 +35,7 @@ The rest of this document is the upstream README, updated where this fork differ
 
 **[v1.4.2](https://github.com/yuchen0x1/GFPGAN/releases/tag/v1.4.2)** · 2026-11-26
 
-本次更新主要改进了 \[Docker 镜像构建与本地开发钩子配置\]。修复了 \[Docker 构建必然失败的问题\]，并修复了 \[pre-commit 钩子版本过旧导致的本地钩子不可用问题\]。 \[本次为维护性补丁版本，不涉及任何推理或训练行为的变化，可直接覆盖升级。\]
+本次更新主要改进了 Docker 镜像构建与本地开发钩子配置。修复了 Docker 构建必然失败的问题，并修复了 pre-commit 钩子版本过旧导致的本地钩子不可用问题。本次为维护性补丁版本，不涉及任何推理或训练行为的变化，可直接覆盖升级。
 
 [Release history](https://github.com/yuchen0x1/GFPGAN/releases)
 
