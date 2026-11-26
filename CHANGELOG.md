@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.4.2 (2026-11-26)
+
+Maintenance release from a full project audit:
+
+- Fixed the Docker build, which always failed because `pyproject.toml` and the
+  declared `README.md` were never copied into the image (`.dockerignore`
+  excludes `*.md`); the packaging files are now copied before `pip install`.
+- Modernized the pre-commit hooks to the same tool versions pinned in the lint
+  workflow (flake8 7.5.0, isort 9.0.2, yapf 0.43.0, codespell 2.4.3,
+  pre-commit-hooks v6.0.0); dropped the archived seed-isort-config hook.
+- Ignored `tests/data/ffhq_gt.lmdb/lock.mdb`, which LMDB recreates on every
+  test run and previously dirtied the working tree.
+
 ## 1.4.1 (2026-11-23)
 
 Patch release focused on reproducible inference and release quality:
